@@ -1,34 +1,35 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import "./App.css";
 import Task from "./Task";
+import TextField from "@mui/material/TextField";
 
 const App = () => {
   const [newTask, setNewTask] = useState("");
+  const [newTaskDetails, setNewTaskDetails] = useState("");
   const [todoList, setTodoList] = useState([]);
 
-  const previousInputValue = useRef("");
-
-  useEffect(() => {
-    previousInputValue.current = newTask;
-  }, [newTask]);
-
   const handleChange = (event) => {
-    event.preventDefault();
     setNewTask(event.target.value);
+  };
+
+  const detailsHandleChange = (event) => {
+    setNewTaskDetails(event.target.value);
   };
 
   const addTask = (event) => {
     event.preventDefault();
+    if (!newTask && !newTaskDetails) {
+      return;
+    }
     const task = {
       id: todoList.length === 0 ? 1 : todoList[todoList.length - 1].id + 1,
-      taskName: newTask,
+      name: newTask,
       completed: false,
+      details: newTaskDetails,
     };
     setTodoList([...todoList, task]);
-    previousInputValue.current = ''
-    console.log(previousInputValue.current, 'current');
-    setNewTask((previousState) => {previousState = previousInputValue.current;})
-    console.log(newTask, 'Nu');
+    setNewTask("");
+    setNewTaskDetails("");
   };
 
   const handleDelete = (id) => {
@@ -36,10 +37,11 @@ const App = () => {
   };
 
   const completeTask = (id) => {
+    const taskFound = todoList.find((task) => task.id === id);
     setTodoList(
       todoList.map((task) => {
         if (task.id === id) {
-          return { ...task, completed: true };
+          return { ...task, completed: !taskFound.completed };
         } else {
           return task;
         }
@@ -50,25 +52,33 @@ const App = () => {
   return (
     <div className="App">
       <div className="addTask">
-        <form onSubmit={addTask}>
+        <form onSubmit={addTask} className="form">
           <input
             onChange={handleChange}
-            ref={previousInputValue}
-            value={previousInputValue.current}
+            className="title"
+            value={newTask}
+            placeholder="Enter Todo Title"
+          />
+          <TextField
+            className="details"
+            id="outlined-multiline-flexible"
+            label="Task Details"
+            multiline
+            maxRows={4}
+            value={newTaskDetails}
+            onChange={detailsHandleChange}
           />
           <button>Add Task</button>
         </form>
       </div>
-
       <div className="list">
         {todoList.map((task) => {
           return (
             <Task
-              taskName={task.taskName}
-              id={task.id}
               handleDelete={handleDelete}
               completeTask={completeTask}
-              completed={task.completed}
+              task={task}
+              key={task.id}
             />
           );
         })}
